@@ -195,8 +195,13 @@ exports.eliminarFotoPerfil = (req, res) => {
   });
 };
 
-// Login de usuario sin correo de google
+// Login de usuario con correo y contraseña
 exports.loginUsuario = async (req, res) => {
+  // Validar que el correo y la contraseña no estén vacíos
+  if (!req.body.correo || !req.body.contrasena) {
+    return res.status(400).json({ error: "Correo y contraseña son requeridos" });
+  }
+
   Usuario.login(req.body.correo, req.body.contrasena, (err, usuario) => {
     try {
       if (err) return res.status(500).json({ error: err.message });
@@ -213,21 +218,72 @@ exports.loginUsuario = async (req, res) => {
   });
 };
 
-// Login sw usuario con correo de google
+// Login usuario con su correo con google
 exports.loginUsuarioCorreo = async (req, res) => {
-  Usuario.obtenerUnUsuarioPorCorreo(req.body.correo, (err, usuario) => {
+  const {user} = req.body
+
+  Usuario.obtenerUnUsuarioPorCorreo(user.email, (err, usuario) => {
     try {
       if (err) return res.status(500).json({ error: err.message });
-    if (!usuario || usuario.lenght == 0) return res.status(400).json({ error: "Usuario no encontrado" });
 
-    const token = jwt.sign({ id: usuario[0].id }, process.env.JWT_SECRET, {
-      expiresIn: 864000, // 1 dia 864000
-    });
+      // Si ya hay un usuario registrado
+      if (usuario && usuario.length > 0) {
+        const token = jwt.sign({ id: usuario[0].id }, process.env.JWT_SECRET, {
+          expiresIn: 86400, // 1 dia
+        });
+    
+        return res.json({token});
+      }
 
-    res.json({token});
+      // Si no hay un usuario con ese correo, lo registramos
+      const { nombre, apellido } = dividirNombreCompleto(user.name);
+      const nombre_usuario = user.email.split('@')[0];
+
+      const nuevoUsuario = new Usuario(
+        nombre,
+        apellido,
+        nombre_usuario,
+        "",
+        user.email,
+        2 // Rol por defecto
+      )
+
+      Usuario.crearDesdeGoogle(nuevoUsuario, (err, resultado) => {
+        if (err) return res.status(500).json({ error: err.message });
+  
+        const nuevoId = resultado.insertId;
+  
+        const token = jwt.sign({ id: nuevoId }, process.env.JWT_SECRET, {
+          expiresIn: 86400, // 1 dia
+        });
+  
+        res.json({ token });
+      });
+
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
     
   });
 };
+
+function dividirNombreCompleto(nombreCompleto) {
+  const partes = nombreCompleto.trim().split(/\s+/);
+
+  if (partes.length === 2) {
+    return {
+      nombre: partes[0],
+      apellido: partes[1],
+    };
+  } else if (partes.length === 3) {
+    return {
+      nombre: partes[0],
+      apellido: partes.slice(1).join(' '), // 2 apellidos
+    };
+  } else {
+    return {
+      nombre: partes.slice(0, -2).join(' '),
+      apellido: partes.slice(-2).join(' '),
+    };
+  }
+}

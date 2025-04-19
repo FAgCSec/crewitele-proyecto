@@ -35,7 +35,27 @@ class Usuario {
       callback
     );
   }
-  
+
+  // Crear usuario desde Google sin contraseña
+  static crearDesdeGoogle(usuario, callback) {
+    const sql = 
+      "INSERT INTO usuario (nombre, apellido, nombre_usuario, contrasena, correo, rol_id) VALUES (?, ?, ?, ?, ?, ?)";
+
+    // Guardamos NULL como contraseña si viene desde Google
+    db.query(
+      sql,
+      [
+        usuario.nombre,
+        usuario.apellidos,
+        usuario.nombre_usuario,
+        null, // contrasena NULL
+        usuario.email,
+        usuario.rol_id,
+      ],
+      callback
+    );
+  }
+
   // Metodo para subir la foto de perfil de un usuario
   static subirFotoPerfil(id, rutaFotoPerfil, callback) {
     const sql = "UPDATE usuario SET ruta_foto_perfil = ? WHERE id = ?";

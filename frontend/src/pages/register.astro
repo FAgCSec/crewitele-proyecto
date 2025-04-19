@@ -5,8 +5,8 @@ import "../styles/register.css";
 
 <Layout title="Registrarse - CreWriteLe">
   <div class="register-container">
-    <h1>CreWriteLe</h1>
-    <h2>Registro</h2>
+    <h2>CreWriteLe</h2>
+    <h3>Registro</h2>
 
     <form id="registroForm">
       <input
@@ -46,6 +46,13 @@ import "../styles/register.css";
       />
       <button type="submit">Registrarse</button>
     </form>
+
+    <span>o tambien puedes</span>
+
+    <button id="register-google" class="google-btn">
+      <img src="/icons/google.svg" alt="Google Logo" />
+      Registrarte con Google
+    </button>
 
     <p>
       ¿Ya tienes una cuenta? <a class="link" href="/login">Inicia Sesión</a>
@@ -121,4 +128,14 @@ import "../styles/register.css";
         });
       }
     });
+
+  // Registrarse con con google
+  const { signIn } = await import("auth-astro/client");
+
+  const loginGoogleButton = document.querySelector(
+    "#register-google"
+  ) as HTMLButtonElement;
+  loginGoogleButton.onclick = () => signIn("google", {
+    callbackUrl: "/login",
+  });
 </script>
