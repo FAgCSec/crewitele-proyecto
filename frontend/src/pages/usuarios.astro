@@ -11,14 +11,14 @@ const [auth, data] = await isLoggedIn(token);
 
 if (auth === false || data === null) return Astro.redirect("/login");
 
-const res = await fetch(`http://localhost:3001/api/usuarios/${data.userId}`);
+const res = await fetch(`https://localhost:3001/api/usuarios/${data.userId}`);
 const [user] = await res.json();
 
 const { rol_id, nombre_rol } = user;
 if (rol_id !== 1 || nombre_rol !== "Administrador")
   return Astro.redirect("/login");
 
-const dataUsers = await fetch("http://localhost:3001/api/usuarios");
+const dataUsers = await fetch("https://localhost:3001/api/usuarios");
 const users = await dataUsers.json();
 ---
 
@@ -80,7 +80,7 @@ const users = await dataUsers.json();
 
         const userId = e.target.getAttribute("data-user-id");
         const res = await fetch(
-          `http://localhost:3001/api/usuarios/${userId}`,
+          `https://localhost:3001/api/usuarios/${userId}`,
           {
             method: "DELETE",
           }

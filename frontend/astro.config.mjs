@@ -6,17 +6,19 @@ import auth from "auth-astro";
 import vercel from "@astrojs/vercel";
 
 
+
+
 // https://astro.build/config
 export default defineConfig({
   output: "server",
   integrations: [auth()],
   adapter: vercel(),
-  /* vite: {
+  vite: {
     server: {
       https: {
         key: './localhost-key.pem',
         cert: './localhost.pem',
       }
     }
-  } */
+  },
 });

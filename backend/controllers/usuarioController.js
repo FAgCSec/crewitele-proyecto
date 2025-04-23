@@ -211,6 +211,8 @@ exports.loginUsuario = async (req, res) => {
         expiresIn: 86400, // 1 dia
       });
 
+      console.log(usuario);
+      
       res.json({token});
     } catch (error) {
       res.status(500).json({ error: error.message });

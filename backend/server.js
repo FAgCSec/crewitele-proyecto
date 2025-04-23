@@ -16,7 +16,9 @@ app.use(fileUpload({ limits: { fileSize: 10 * 1024 * 1024 } })) // 10MB
 const PORT = process.env.PORT || 3001;
 
 // Middleware para habilitar CORS (permitir solicitudes desde otros orígenes)
-app.use(cors()); // Permite todas las solicitudes de cualquier origen
+app.use(cors({
+  origin: "*", // Permitir solicitudes desde cualquier origen
+})); // Permite todas las solicitudes de cualquier origen
 
 // Middleware para parsear el cuerpo de las solicitudes en JSON y URL encoded
 app.use(bodyParser.json());
