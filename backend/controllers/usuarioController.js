@@ -1,9 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-
 const jwt = require("jsonwebtoken");
-const Usuario = require("../models/usuario");
+const Usuario = require("../models/usuario.model");
 
 require("dotenv").config();
 
@@ -197,6 +196,7 @@ exports.eliminarFotoPerfil = (req, res) => {
 
 // Login de usuario con correo y contraseña
 exports.loginUsuario = async (req, res) => {
+
   // Validar que el correo y la contraseña no estén vacíos
   if (!req.body.correo || !req.body.contrasena) {
     return res.status(400).json({ error: "Correo y contraseña son requeridos" });
@@ -211,9 +211,11 @@ exports.loginUsuario = async (req, res) => {
         expiresIn: 86400, // 1 dia
       });
 
-      console.log(usuario);
       
-      res.json({token});
+      res.json({
+        token,
+        userId: usuario.id, // o user.id, según cómo se guarde en tu base de datos
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

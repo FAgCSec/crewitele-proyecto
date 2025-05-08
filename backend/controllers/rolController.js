@@ -1,4 +1,4 @@
-const Rol = require('../models/rol');
+const Rol = require('../models/rol.model');
 
 // Crear nuevo rol
 exports.crearRol = (req, res) => {

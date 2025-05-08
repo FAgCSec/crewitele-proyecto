@@ -1,6 +1,9 @@
-const Noticia = require("../models/noticia");
+const Noticia = require("../models/noticia.model");
 const imgur = require("imgur");
 const fs = require("fs");
+const path = require("path");
+const moment = require('moment');
+
 
 // Crear nueva noticia
 exports.crearNoticia = (req, res) => {
@@ -8,7 +11,7 @@ exports.crearNoticia = (req, res) => {
     return res.status(400).json({ error: "No se ha subido ninguna imagen" });
   }
 
-  let {fotoNoticia} = req.files;
+  let { fotoNoticia } = req.files;
   const mimetype = fotoNoticia.mimetype;
   const size = fotoNoticia.size;
 
@@ -18,7 +21,7 @@ exports.crearNoticia = (req, res) => {
       error: "La imagen es demasiado grande. Máximo 10MB",
     });
   }
-  
+
   // Validar tipo de archivo
   if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
     return res.status(400).json({
@@ -26,32 +29,48 @@ exports.crearNoticia = (req, res) => {
     });
   }
 
-  let uploadPath = __dirname + "/uploads/" + fotoNoticia.name;
+  // Usar path.join para una ruta segura
+  const uploadDir = path.join(__dirname, "../uploads");
+  const uploadPath = path.join(uploadDir, fotoNoticia.name);
 
+  // Verificar si la carpeta de "uploads" existe, si no la crea
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  // Mover el archivo a la carpeta de "uploads"
   fotoNoticia.mv(uploadPath, function (err) {
     if (err) {
       return res.status(500).send(err);
     }
 
-    imgur.uploadFile(uploadPath).then((urlObject) => {
-      fs.unlinkSync(uploadPath);
-      const idFotoNoticia = urlObject.id;
+    // Subir la imagen a imgur
+    imgur.uploadFile(uploadPath)
+      .then((urlObject) => {
+        // Eliminar el archivo local después de cargarlo
+        fs.unlinkSync(uploadPath);
 
-      const nuevaNoticia = new Noticia(
-        req.body.titulo,
-        req.body.contenido,
-        req.body.autor_id,
-        idFotoNoticia
-      );
+        const idFotoNoticia = urlObject.id;
 
-      Noticia.crear(nuevaNoticia, (err, resultado) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({
-          mensaje: "Noticia creada exitosamente",
-          id: resultado.insertId,
+        const nuevaNoticia = new Noticia(
+          req.body.titulo,
+          req.body.contenido,
+          req.body.autor_id,
+          idFotoNoticia
+        );
+
+        // Crear la noticia en la base de datos
+        Noticia.crear(nuevaNoticia, (err, resultado) => {
+          if (err) return res.status(500).json({ error: err.message });
+          res.status(201).json({
+            mensaje: "Noticia creada exitosamente",
+            id: resultado.insertId,
+          });
         });
+      })
+      .catch((err) => {
+        res.status(500).json({ error: "Error al subir imagen a Imgur", detalle: err.message });
       });
-    });
   });
 };
 
@@ -59,23 +78,12 @@ exports.crearNoticia = (req, res) => {
 exports.obtenerNoticias = (req, res) => {
   Noticia.obtenerTodos((err, noticias) => {
     if (err) return res.status(500).json({ error: err.message });
+    // Formatear las fechas de las noticias
+    noticias = noticias.map(noticia => {
+      noticia.fecha_publicacion = moment(noticia.fecha_publicacion).format('DD MMMM YYYY, HH:mm');
+      return noticia;
+    });
     res.json(noticias);
-  });
-};
-
-// Obtener todas las noticias de un autor
-exports.obtenerNoticiasPorAutor = (req, res) => {
-  Noticia.obtenerNoticiasPorAutor(req.params.id, (err, noticias) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(noticias);
-  });
-};
-
-// Obtener una noticia
-exports.obtenerUnaNoticia = (req, res) => {
-  Noticia.obtenerUnaNoticia(req.params.id, (err, noticia) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(noticia);
   });
 };
 

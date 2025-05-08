@@ -1,20 +1,27 @@
 const https = require("https");
 const fs = require("fs");
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const cors = require("cors"); // Middleware para habilitar CORS
 const fileUpload = require('express-fileupload')
-const routes = require("./routes/routes"); // Rutas de la API
 
 // Cargar variables de entorno
 dotenv.config();
 
+// Importación de rutas
+const usuarioRoutes = require("./routes/usuarios.routes");
+const noticiaRoutes = require("./routes/noticias.routes");
+const comentarioRoutes = require("./routes/comentarios.routes");
+const rolRoutes = require("./routes/roles.routes");
+const authRoutes = require("./routes/auth.routes");
+const descargarRoutes = require("./routes/descargar.routes");
+const reportesRoutes = require("./routes/reportes.routes");
+
+
 const app = express();
 app.use(fileUpload({ limits: { fileSize: 10 * 1024 * 1024 } })) // 10MB
-const PORT = process.env.PORT || 3001;
-
+const PORT = process.env.DB_PORT || 3001
 // Middleware para habilitar CORS (permitir solicitudes desde otros orígenes)
 app.use(cors({
   origin: "*", // Permitir solicitudes desde cualquier origen
@@ -24,8 +31,15 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Rutas de la API
-app.use("/api", routes);
+// Asignación de rutas
+app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/noticias", noticiaRoutes);
+app.use("/api/comentarios", comentarioRoutes);
+app.use("/api/rol", rolRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api", descargarRoutes);
+app.use("/reportes",reportesRoutes);
+
 
 // Manejo de errores
 app.use((err, req, res, next) => {
@@ -41,4 +55,5 @@ const httpsOptions = {
 
 https.createServer(httpsOptions, app).listen(PORT, () => {
   console.log(`Servidor corriendo en: https://localhost:${PORT}`);
+  console.log(`Servidor corriendo en el puerto :${PORT}`);
 })

@@ -7,7 +7,7 @@ const ExcelJS = require("exceljs");
 const dotenv = require("dotenv");
 const compressing = require("compressing");
 
-const Noticia = require("../models/noticia");
+const Noticia = require("../models/noticia.model");
 
 dotenv.config();
 
